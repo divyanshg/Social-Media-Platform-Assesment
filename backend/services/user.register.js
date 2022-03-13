@@ -7,23 +7,33 @@ module.exports = (_user) => new Promise(async (resolve, reject) => {
         const {
             first_name,
             last_name,
+            username,
             email,
             password
         } = _user;
 
         // Validate user input
-        if (!(email && password && first_name && last_name)) {
+        if (!(email && password && first_name && last_name && username)) {
             reject("All input is required");
         }
 
         // check if user already exist
         // Validate if user exist in our database
         const oldUser = await User.findOne({
-            email
+            $or: [{
+                email: email.toLowerCase()
+            }, {
+                username: username.toLowerCase()
+            }]
         });
 
         if (oldUser) {
-            reject("User Already Exist. Please Login");
+            if(oldUser.email === email){
+                reject("Email already exist");
+            }
+            if(oldUser.username === username){
+                reject("Username already exist");
+            }
         }
 
         //Encrypt user password
@@ -33,6 +43,7 @@ module.exports = (_user) => new Promise(async (resolve, reject) => {
         const user = await User.create({
             first_name,
             last_name,
+            username: username.toLowerCase(),
             email: email.toLowerCase(), // sanitize: convert email to lowercase
             password: encryptedPassword,
         });
@@ -40,6 +51,7 @@ module.exports = (_user) => new Promise(async (resolve, reject) => {
         // Create token
         const token = jwt.sign({
                 user_id: user._id,
+                username,
                 email
             },
             process.env.TOKEN_KEY, {
@@ -48,7 +60,9 @@ module.exports = (_user) => new Promise(async (resolve, reject) => {
         );
 
         // return token
-        resolve({accessToken: token})
+        resolve({
+            accessToken: token
+        })
     } catch (err) {
         reject(err)
     }

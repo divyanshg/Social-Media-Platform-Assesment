@@ -18,6 +18,7 @@ const morgan = require('morgan')
 
 const users = require('./routes/route.users');
 const welcome = require('./routes/route.welcome');
+const post = require('./routes/route.posts')
 
 const app = express();
 
@@ -27,11 +28,15 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser())
+app.use(express.static(__dirname + '/public'));
 
 //Initializing the Routes
 
 app.use('/api/v1/users', users);
 app.use('/api/v1/welcome', welcome);
+app.use('/api/v1/post', post);
+app.use('/uploads', express.static('uploads'));
+
 
 //Exporting the app
 

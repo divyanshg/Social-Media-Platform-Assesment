@@ -15,14 +15,19 @@ module.exports = (credentials) => new Promise(async (resolve, reject) => {
         }
         // Validate if user exist in our database
         const user = await User.findOne({
-            email
+            $or: [{
+                email: email.toLowerCase()
+            },{
+                username: email.toLowerCase()
+            }]
         });
 
         if (user && (await bcrypt.compare(password, user.password))) {
             // Create token
             const token = jwt.sign({
                     user_id: user._id,
-                    email
+                    email: user.email,
+                    username: user.username
                 },
                 process.env.TOKEN_KEY, {
                     expiresIn: "2h",
